@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Palestra Sisweek / Ideathon: como validar a sua ideia sem cair no viés da IA">
+  <title>Autor da sua ideia</title>
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@6.0.2/dist/reveal.css">
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #ffffff;
+      --side-bg: #f7f7f8;
+      --side-active: #e9e9eb;
+      --surface: #f0f0f1;
+      --card: #f7f7f8;
+      --head: #ececee;
+      --line: #d9d9de;
+      --text: #1f1f1f;
+      --strong: #000;
+      --muted: #5c5c66;
+      --accent: #0b7a6a;
+      --warn: #9a5800;
+      --bad: #c0392b;
+      --side: clamp(180px, 14.5vw, 320px);
+      --col: 40em;
+      /* fonte base pensada para TV pequena: ~40px em 1920px de largura */
+      --fs: clamp(19px, 2.1vw, 48px);
+    }
+    body, .reveal-viewport { background: var(--bg); }
+    .reveal {
+      color: var(--text);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: var(--fs);
+      line-height: 1.4;
+    }
+    .reveal strong { color: var(--strong); }
+    .reveal .accent { color: var(--accent); }
+    .reveal em { color: var(--warn); font-style: normal; }
+    .reveal a { color: var(--accent); }
+
+    /* ---------- janela do chat ---------- */
+    .sidebar {
+      position: fixed; inset: 0 auto 0 0; width: var(--side); z-index: 5;
+      background: var(--side-bg); border-right: 1px solid var(--line); padding: 1em .6em; box-sizing: border-box;
+      display: flex; flex-direction: column; gap: .15em;
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: calc(var(--fs) * .52); color: var(--text);
+    }
+    /* a logo é branca e verde-limão: fica num selo escuro para manter as cores da marca */
+    .brand, .hero .logo { background: #111; border-radius: .7em; padding: .7em .8em; margin-bottom: 1em; }
+    .brand img, .hero .logo img { display: block; width: 100%; height: auto; }
+    .hero .logo { width: 9em; margin: 0; }
+    .side-item { padding: .5em .7em; border-radius: .6em; color: #3a3a40; line-height: 1.25; transition: background .2s; cursor: pointer; }
+    .side-item:hover { background: var(--side-active); }
+    .side-item.new { display: flex; align-items: center; gap: .5em; margin-bottom: .8em; }
+    .side-item.active { background: var(--side-active); color: var(--strong); font-weight: 600; }
+    .side-label { color: var(--muted); font-size: .85em; padding: .4em .7em; }
+    .side-user { margin-top: auto; display: flex; align-items: center; gap: .6em; padding: .6em .4em; border-top: 1px solid var(--line); }
+    .side-user .pic { flex: none; width: 2em; height: 2em; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-weight: 800; font-size: .85em; }
+    .side-user small { display: block; color: var(--muted); }
+    .side-user img.pic { object-fit: cover; }
+
+    .profile { display: flex; align-items: center; gap: .8em; margin-bottom: .6em; }
+    .profile img { flex: none; width: 4.2em; height: 4.2em; border-radius: 50%; object-fit: cover; object-position: 50% 25%; border: 3px solid var(--accent); }
+    .profile span { display: block; color: var(--muted); font-size: .8em; }
+    .profile .name { display: block; font-size: 1.15em; }
+
+    .topbar {
+      position: fixed; top: 0; left: var(--side); right: 0; z-index: 4; height: 2.4em;
+      display: flex; align-items: center; justify-content: space-between; padding: 0 1em;
+      background: linear-gradient(var(--bg) 70%, transparent);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: calc(var(--fs) * .5); color: var(--text);
+    }
+    .model { font-weight: 600; }
+    .model::after { content: " ▾"; color: var(--muted); }
+    .share { display: inline-flex; align-items: center; gap: .45em; padding: .35em .8em; border-radius: .7em; font-size: .85em; font-weight: 500; color: var(--text); }
+    .share:hover { background: var(--surface); }
+    .share svg { width: 1.05em; height: 1.05em; }
+
+    .composer {
+      position: fixed; left: var(--side); right: 0; bottom: 0; z-index: 4; padding: 1em 1em .4em;
+      background: linear-gradient(transparent, var(--bg) 35%);
+      font-family: Inter, ui-sans-serif, system-ui, sans-serif; font-size: calc(var(--fs) * .52);
+      transition: opacity .3s;
+    }
+    .composer .box, .hero .box {
+      max-width: calc(var(--col) * 1.6); margin: 0 auto; background: var(--bg); border: 1px solid var(--line);
+      box-shadow: 0 .2em 1em rgba(0,0,0,.07); border-radius: 1.6em;
+      display: flex; align-items: center; gap: .8em; padding: .6em 1em; color: var(--muted);
+    }
+    .box .grow { flex: 1; }
+    .box svg { width: 1.2em; height: 1.2em; flex: none; }
+    .send { width: 1.9em; height: 1.9em; border-radius: 50%; background: #000; color: #fff; display: grid; place-items: center; flex: none; }
+    .disclaimer { text-align: center; color: var(--muted); font-size: .8em; margin: .5em 0 0; }
+    .disclaimer b { color: var(--accent); font-weight: 600; }
+    body.home .composer { opacity: 0; }
+
+    /* ---------- área dos slides ---------- */
+    .reveal .slides { inset: 0 0 0 var(--side); width: auto; height: auto; margin: 0; text-align: left; pointer-events: auto; }
+    .reveal .slides > section {
+      inset: 0; width: 100%; height: 100%; box-sizing: border-box; overflow-y: auto; scrollbar-width: none;
+      padding: 1.6em 1em 3.6em; scroll-padding: 1.6em 0 3.6em; pointer-events: auto;
+    }
+    .thread { max-width: var(--col); margin: 0 auto; display: flex; flex-direction: column; gap: 1em; }
+    .reveal p, .reveal ul, .reveal ol { margin: 0 0 .5em; }
+    .reveal ul, .reveal ol { padding-left: 1.2em; display: block; }
+    .reveal li { margin: .2em 0; }
+
+    .msg.user { align-self: flex-end; max-width: 80%; background: var(--surface); border-radius: 1.2em; padding: .55em 1em; }
+    .msg.user p:last-child { margin-bottom: 0; }
+    .msg.user.wide { max-width: 90%; border-radius: 1em; padding: .8em 1.1em; }
+    .msg.user .card, .msg.user .book, .msg.user .flow span { background: var(--bg); }
+    .msg.user .card.you { background: #effaf7; }
+    .msg.ai { display: flex; gap: .7em; align-items: flex-start; }
+    .avatar { flex: none; width: 1.6em; height: 1.6em; border-radius: 50%; border: 1px solid var(--line); display: grid; place-items: center; color: var(--accent); margin-top: .05em; }
+    .avatar svg { width: 1em; height: 1em; }
+    .msg.ai .body { flex: 1; min-width: 0; }
+    .actions { display: flex; gap: .8em; color: var(--muted); }
+    .actions svg { width: .75em; height: .75em; }
+    .typing { display: none; gap: .3em; padding: .55em 0; }
+    .typing i { width: .4em; height: .4em; border-radius: 50%; background: var(--muted); animation: blink 1s infinite; }
+    .typing i:nth-child(2) { animation-delay: .15s; }
+    .typing i:nth-child(3) { animation-delay: .3s; }
+    @keyframes blink { 50% { opacity: .2; } }
+
+    /* fragmentos com cara de chat: "digitando…" (via JS) e depois a resposta em streaming */
+    .reveal .msg.fragment { transform: translateY(.5em); transition: opacity .3s, transform .3s; }
+    .reveal .msg.fragment.visible { transform: none; }
+    .msg.ai.is-typing .typing { display: flex; }
+    .msg.ai.is-typing .body { display: none; }
+    .msg.ai.fragment.visible .body > * { animation: rise .35s both; animation-delay: calc(var(--i, 0) * .14s); }
+    @keyframes rise { from { opacity: 0; transform: translateY(.4em); } }
+
+    .notice { align-self: center; color: var(--muted); font-size: .7em; border: 1px solid var(--line); border-radius: 2em; padding: .3em 1em; }
+    .big { font-size: 1.9em; font-weight: 800; line-height: 1.15; letter-spacing: -.02em; color: var(--strong); text-align: center; margin: 1.4em 0 .3em; }
+    .sub { text-align: center; color: var(--muted); font-size: 1.05em; }
+
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(11em, 1fr)); gap: .6em; margin: .4em 0 .6em; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: .8em; padding: .6em .8em; }
+    .card p { margin: 0; font-size: .85em; }
+    .card.you { border-color: #8fcdc2; background: #effaf7; }
+    .card.ai { border-color: #e6c48f; background: #fff8ec; }
+    .tag { display: block; font-size: .6em; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: .2em; }
+    .card.ai .tag { color: var(--warn); }
+
+    .reveal table { width: 100%; border-collapse: collapse; font-size: .85em; margin: .3em 0 .6em; }
+    .reveal th, .reveal td { text-align: left; padding: .4em .6em; border-bottom: 1px solid var(--line); vertical-align: top; }
+    .reveal th { color: var(--muted); font-weight: 700; }
+    .bad { color: var(--bad) !important; }
+    .good { color: var(--accent) !important; }
+
+    .ladder { list-style: none; padding: 0 !important; }
+    .ladder li { display: grid; grid-template-columns: 12em 1fr; align-items: center; gap: .6em; margin: .2em 0; font-size: .85em; }
+    .ladder li::after { content: ""; height: .8em; border-radius: .5em; width: var(--w); background: linear-gradient(90deg, #c9c9cf, var(--accent)); }
+    .ladder li:first-child::after { background: var(--bad); }
+
+    .steps { list-style: none; padding: 0 !important; counter-reset: s; }
+    .steps li { counter-increment: s; display: flex; gap: .6em; align-items: baseline; margin: .3em 0; font-size: .9em; }
+    .steps li::before { content: counter(s); flex: none; width: 1.5em; height: 1.5em; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; font-size: .75em; font-weight: 800; }
+
+    .flow { display: flex; flex-wrap: wrap; align-items: center; gap: .4em; margin: .4em 0 .6em; }
+    .flow span { background: var(--card); border: 1px solid var(--line); border-radius: 2em; padding: .25em .8em; }
+    .flow i { color: var(--muted); font-style: normal; }
+
+    .book { display: flex; gap: .8em; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: .8em; padding: .6em .8em; margin: .2em 0 .7em; }
+    .book .cover { flex: none; width: 2.3em; height: 3.2em; border-radius: .15em .4em .4em .15em; background: var(--c); box-shadow: inset .22em 0 rgba(0,0,0,.25); display: grid; place-items: center; font-size: 1.1em; }
+    .book small { display: block; color: var(--muted); font-size: .7em; }
+    .books .book { margin: 0 0 .35em; padding: .35em .7em; }
+    .books .book .cover { width: 1.7em; height: 2.3em; font-size: .9em; }
+
+    .preview { border: 1px solid var(--line); border-radius: .8em; overflow: hidden; margin: .3em 0 .6em; box-shadow: 0 .2em 1em rgba(0,0,0,.06); }
+    .preview > header { padding: .3em .9em; background: var(--head); color: var(--muted); font-size: .6em; }
+    .lp { background: #fff; padding: .8em 1.2em; display: flex; gap: 1em; align-items: center; }
+    .lp > div { flex: 1; }
+    .lp .h { color: #111; font-size: 1.05em; font-weight: 800; line-height: 1.2; margin: .1em 0 .2em; }
+    .lp p { color: #555; font-size: .7em; margin: 0; }
+    .lp .arrow { flex: none; color: var(--muted); font-size: 1.2em; }
+    .lp .btn { display: inline-block; margin-top: .4em; background: #1a73e8; color: #fff; border-radius: .4em; padding: .3em .8em; font-size: .7em; font-weight: 700; }
+    .plans { display: flex; gap: .4em; margin-top: .3em; }
+    .plans span { flex: 1; text-align: center; border: 1px solid var(--line); border-radius: .4em; padding: .3em; font-size: .75em; font-weight: 700; }
+
+    .ads { display: grid; grid-template-columns: repeat(3, 1fr); gap: .5em; margin: .3em 0 .6em; }
+    .ad { background: #fff; border: 1px solid var(--line); box-shadow: 0 .15em .6em rgba(0,0,0,.06); border-radius: .7em; padding: .6em .7em; font-size: .75em; }
+    .ad small { color: var(--muted); display: block; }
+    .ad b { display: block; margin: .2em 0; line-height: 1.25; }
+    .ad .m { color: var(--accent); font-weight: 700; }
+
+    .muted { color: var(--muted); }
+    .small { font-size: .8em; }
+    .ref { color: var(--muted); font-size: .6em; margin-top: .4em; }
+
+    /* capa: estado vazio do chat */
+    .hero { min-height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: .9em; }
+    .hero h1 { font-size: 2.2em; font-weight: 700; color: var(--strong); margin: 0; text-transform: none; letter-spacing: -.02em; }
+    .hero .box { width: min(100%, 26em); box-sizing: border-box; color: var(--text); font-size: 1.05em; padding: .8em 1em; }
+    .hero .box .grow::after { content: "▍"; color: var(--accent); animation: blink 1s infinite; }
+    .chips { display: flex; flex-wrap: wrap; justify-content: center; gap: .5em; font-size: .7em; }
+    .chips span { border: 1px solid var(--line); border-radius: 2em; padding: .3em 1em; }
+
+    .reveal .progress { color: var(--accent); height: 4px; }
+    .reveal .slide-number { background: transparent; color: var(--muted); font-size: 14px; }
+    .reveal .controls { color: var(--accent); }
+
+    @media (max-width: 700px) {
+      .sidebar { display: none; }
+      :root { --side: 0px; }
+      .ladder li { grid-template-columns: 1fr; }
+      .ads { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body class="home">
+  <svg width="0" height="0" style="position:absolute">
+    <symbol id="spark" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2c.6 4.6 2.9 7.4 10 10-7.1 2.6-9.4 5.4-10 10-.6-4.6-2.9-7.4-10-10 7.1-2.6 9.4-5.4 10-10z"/></symbol>
+    <symbol id="plus" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="up" viewBox="0 0 24 24"><path stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" fill="none" d="M12 19V5M6 11l6-6 6 6"/></symbol>
+    <symbol id="mic" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></g></symbol>
+    <symbol id="share" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></g></symbol>
+    <symbol id="copy" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="2" fill="none"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></g></symbol>
+    <symbol id="redo" viewBox="0 0 24 24"><g stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"><path d="M20 12a8 8 0 1 1-2.3-5.7"/><path d="M20 4v5h-5"/></g></symbol>
+  </svg>
+
+  <nav class="sidebar" aria-hidden="true">
+    <div class="brand"><img src="assets/img/logo-sisweek.svg" alt="Sisweek"></div>
+    <div class="side-item new" data-chat="nova"><svg width="1em" height="1em"><use href="#plus"/></svg> Nova conversa</div>
+    <div class="side-label">Ideathon</div>
+    <div class="side-item" data-chat="intro">Quem está falando</div>
+    <div class="side-item" data-chat="vies">Minha ideia é boa? 🤩</div>
+    <div class="side-item" data-chat="problema">Ame o problema ❤️</div>
+    <div class="side-item" data-chat="enxuta">Startup enxuta 🔁</div>
+    <div class="side-item" data-chat="vaca">A vaca roxa 🐄</div>
+    <div class="side-item" data-chat="alavanca">IA como alavanca</div>
+    <div class="side-item" data-chat="autor">Bora empreender 🚀</div>
+    <div class="side-user"><img class="pic" src="assets/img/foto-perfil.jpg" alt=""><div>Waldsson<small>Palestrante</small></div></div>
+  </nav>
+
+  <header class="topbar" aria-hidden="true">
+    <span class="model" id="model">Assistente</span>
+    <span class="share"><svg><use href="#share"/></svg>Compartilhar</span>
+  </header>
+
+  <div class="composer" aria-hidden="true">
+    <div class="box">
+      <svg><use href="#plus"/></svg>
+      <span class="grow">Pergunte qualquer coisa</span>
+      <svg><use href="#mic"/></svg>
+      <span class="send"><svg><use href="#up"/></svg></span>
+    </div>
+    <p class="disclaimer">A IA pode cometer erros. <b>Valide com o mercado.</b></p>
+  </div>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- ================= CAPA ================= -->
+      <section data-chat="nova" data-home>
+        <div class="hero">
+          <div class="logo"><img src="assets/img/logo-sisweek.svg" alt="Sisweek"></div>
+          <h1>Olá, Ideathon! 👋</h1>
+          <div class="box">
+            <svg><use href="#plus"/></svg>
+            <span class="grow">A IA achou minha ideia ótima. E agora?</span>
+            <span class="send"><svg><use href="#up"/></svg></span>
+          </div>
+          <div class="chips">
+            <span>💡 Minha ideia é boa?</span>
+            <span>❤️ Apaixone-se pelo problema</span>
+            <span>🧪 Como validar de verdade</span>
+          </div>
+          <p class="muted small">Uso consciente da IA: como ser autor da sua ideia<br>Waldsson Sacramento · SISWEEK 2026</p>
+        </div>
+        <aside class="notes">Abrir com a pergunta: quem aqui já perguntou para uma IA se a própria ideia era boa? Levantem a mão.</aside>
+      </section>
+
+
+      <!-- ================= INTRO ================= -->
+      <!-- Regra dos balões: o usuário é o palestrante; a IA só fala como IA, em primeira pessoa. -->
+      <section data-chat="intro">
+        <div class="thread">
+          <div class="msg ai">Antes de começar: quem é você? 👀</div>
+          <div class="msg user wide fragment">
+            <div class="profile">
+              <img src="assets/img/foto-perfil.jpg" alt="Foto de Waldsson Sacramento">
+              <div>
+                <strong class="name">Waldsson Sacramento</strong>
+                <span>Engenheiro de Software · LCCV/UFAL</span>
+                <span>Pesquisador · NEES/UFAL</span>
+              </div>
+            </div>
+            <ul>
+              <li>Mestrando no <strong>PPGI/UFAL</strong></li>
+              <li>Bacharel em Sistemas de Informação pela UFAL, Campus Arapiraca, UE Penedo</li>
+              <li>Experiência com aplicações web e <strong>sistemas em produção</strong></li>
+            </ul>
+          </div>
+        </div>
+        <aside class="notes">20 segundos. O que importa: "eu construo sistemas que vão para produção, e também tenho minhas ideias de negócio".</aside>
+      </section>
+
+      <section data-chat="intro">
+        <div class="thread">
+          <div class="msg ai">E sobre o que você vai falar hoje?</div>
+          <div class="msg user wide fragment">
+            <ol>
+              <li>Por que a IA <strong>sempre</strong> concorda com você</li>
+              <li>Como se <strong>apaixonar pelo problema</strong></li>
+              <li>Como um indie hacker <strong>testou</strong> a ideia antes de programar</li>
+              <li>Como usar a IA como <strong>alavanca</strong>, não como juíza</li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VIÉS ================= -->
+      <section data-chat="vies" data-model="Assistente · modo elogio">
+        <div class="thread">
+          <div class="notice">Parte 1 · O viés da IA</div>
+          <div class="msg user">Imagine que estamos em 2010. Tive uma ideia: um app onde você enche uma <strong>fila de tweets</strong> e ele publica sozinho ao longo do dia. O que acha?</div>
+          <div class="msg ai fragment">
+            <p><strong>Que ideia incrível! 🚀</strong></p>
+            <p>O Twitter está <strong>explodindo</strong> e sua solução é <strong>simples, útil e escalável</strong>.</p>
+            <p>Isso tem tudo para dar certo! Quer que eu monte o pitch? 🏆</p>
+          </div>
+        </div>
+        <aside class="notes">Não revelar ainda que é o Buffer. Ler a resposta em tom bem empolgado. Notar: nenhum dado, nenhuma pergunta de volta.</aside>
+      </section>
+
+      <section data-chat="vies" data-model="Assistente · modo elogio">
+        <div class="thread">
+          <div class="msg user">Pensando melhor… acho ruim. Vários apps de Twitter já deixam agendar tweets.</div>
+          <div class="msg ai fragment">
+            <p><strong>Você tem toda razão em ser cauteloso. 🤔</strong></p>
+            <p>É só um <strong>recurso</strong>, não um produto. Os concorrentes podem copiar em uma semana.</p>
+            <p>Talvez valha buscar outra ideia. Quer algumas sugestões? 💡</p>
+          </div>
+        </div>
+        <aside class="notes">Mesma IA, mesma ideia, cinco segundos depois. Só mudou a minha opinião.</aside>
+      </section>
+
+      <section data-chat="vies">
+        <div class="thread">
+          <p class="big">Mesma ideia.<br>Duas respostas opostas.</p>
+          <p class="sub">A única coisa que mudou foi <strong>a sua opinião</strong>.</p>
+          <p class="sub fragment"><span class="accent">A IA virou um espelho.</span> 🪞</p>
+        </div>
+      </section>
+
+      <section data-chat="vies">
+        <div class="thread">
+          <div class="msg user">Por que você concordou comigo das duas vezes?</div>
+          <div class="msg ai fragment">
+            <p>Isso tem nome: <strong>bajulação</strong> (<em>sycophancy</em>).</p>
+            <ul>
+              <li>Fui treinada com avaliações de pessoas, e pessoas gostam de quem <strong>concorda</strong> com elas.</li>
+              <li>Pesquisas mostram que assistentes como eu ajustam a resposta à <strong>opinião do usuário</strong>.</li>
+              <li>Em 2025, a OpenAI desfez uma atualização do GPT-4o por ser <strong>bajuladora demais</strong>.</li>
+            </ul>
+            <p class="ref">Sharma et al., “Towards Understanding Sycophancy in Language Models”, 2023 · OpenAI, “Sycophancy in GPT-4o”, 2025.</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="vies">
+        <div class="thread">
+          <div class="msg user wide">
+            <p>Sabe o mais curioso? Essa ideia <strong>existe</strong>. É o <strong>Buffer</strong>, de <strong>Joel Gascoigne</strong>, um desenvolvedor sozinho no Reino Unido.</p>
+            <p>E ele <strong>não perguntou</strong> a ninguém se a ideia era boa. Ele <strong>testou</strong>, e contou tudo no blog. 👇</p>
+            <p class="ref">Joel Gascoigne, “Idea to Paying Customers in 7 Weeks: How We Did It”, blog do Buffer, 2011.</p>
+          </div>
+          <div class="msg ai fragment">Ou seja… quem validou a ideia não fui eu. 😅</div>
+        </div>
+        <aside class="notes">Virada da palestra: a ideia era real. A partir daqui o Buffer é o fio condutor.</aside>
+      </section>
+
+      <section data-chat="vies">
+        <div class="thread">
+          <div class="msg user">
+            <p>Confissão: eu também caí nessa. 😅</p>
+            <p>Mostrei para a IA minha ideia de um app de agenda para manicures e barbeiros. Ela amou.</p>
+          </div>
+          <div class="msg user fragment">
+            <p>Aí eu escrevi o que eu <strong>achava</strong>:</p>
+            <ul>
+              <li>“Elas perdem tempo respondendo ‘tem horário?’”</li>
+              <li>“Elas pagariam R$ 30 por mês”</li>
+            </ul>
+            <p>Nada disso era fato. Eram <strong>apostas</strong> a testar.</p>
+          </div>
+        </div>
+        <aside class="notes">Rápido, um minuto. A Agenda Negócio é só o exemplo pessoal.</aside>
+      </section>
+
+      <!-- ================= PROBLEMA (Uri Levine) ================= -->
+      <section data-chat="problema">
+        <div class="thread">
+          <div class="notice">Parte 2 · O problema</div>
+          <div class="msg ai">Se a minha opinião não vale, por onde você começaria?</div>
+          <div class="msg user wide fragment">
+            <div class="book" style="--c:#e63946"><span class="cover">❤️</span><div><strong>Apaixone-se pelo problema, não pela solução</strong><small>Uri Levine · cofundador do Waze e do Moovit · 2023</small></div></div>
+            <p>A solução vai mudar várias vezes. <strong>O problema fica.</strong></p>
+            <p>Quem se apaixona pela solução defende a ideia. Quem se apaixona pelo problema <strong>escuta as pessoas</strong>.</p>
+          </div>
+        </div>
+        <aside class="notes">O Waze nasceu da raiva do trânsito, um problema que todo mundo sente todo dia.</aside>
+      </section>
+
+      <section data-chat="problema">
+        <div class="thread">
+          <div class="msg ai">E como você sabe se um problema é bom?</div>
+          <div class="msg user wide fragment">
+            <p>Quatro perguntas que <strong>nenhuma IA</strong> responde por você:</p>
+            <ol>
+              <li><strong>Quem</strong> sofre esse problema?</li>
+              <li><strong>Com que frequência</strong> isso acontece?</li>
+              <li><strong>Como</strong> essa pessoa resolve hoje?</li>
+              <li><strong>Quanto custa</strong> em tempo, dinheiro ou estresse?</li>
+            </ol>
+            <p class="small">No Buffer: quem quer postar todo dia, mas não quer marcar o horário <strong>de cada tweet</strong>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="problema">
+        <div class="thread">
+          <div class="msg ai">Posso montar um questionário perguntando se as pessoas <strong>usariam</strong> o seu app! 📝</div>
+          <div class="msg user wide fragment">
+            <p>Cuidado! Pergunte sobre o <strong>passado</strong>, não sobre o futuro:</p>
+            <table>
+              <tr><th class="bad">❌ Opinião</th><th class="good">✅ Comportamento</th></tr>
+              <tr><td>“Você usaria esse app?”</td><td>“Quando foi a última vez que isso aconteceu com você?”</td></tr>
+              <tr><td>“Acha uma boa ideia?”</td><td>“O que você já tentou para resolver?”</td></tr>
+            </table>
+            <p class="ref">Rob Fitzpatrick, <em>The Mom Test</em>, 2013.</p>
+          </div>
+        </div>
+        <aside class="notes">Todo mundo é educado sobre o futuro. O passado não mente.</aside>
+      </section>
+
+      <!-- ================= STARTUP ENXUTA (Eric Ries) ================= -->
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="notice">Parte 3 · Testar de verdade</div>
+          <div class="msg ai">Problema entendido! Agora eu gero o app inteiro para você? 🚀</div>
+          <div class="msg user wide fragment">
+            <div class="book" style="--c:#2a9d8f"><span class="cover">🔁</span><div><strong>A Startup Enxuta</strong><small>Eric Ries · cofundador da IMVU e fundador da LTSE · 2011</small></div></div>
+            <p>Ainda não. A ideia é um conjunto de <strong>hipóteses</strong>. Teste com o menor experimento possível:</p>
+            <div class="flow"><span>🔨 Construir</span><i>→</i><span>📏 Medir</span><i>→</i><span>💡 Aprender</span><i>↻</i></div>
+            <p>Esse experimento mínimo é o <strong>MVP</strong>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="msg ai">E qual foi o MVP do Buffer?</div>
+          <div class="msg user wide fragment">
+            <p>Joel até começou a programar… e <strong>parou</strong>. Primeiro, <strong>duas páginas</strong>:</p>
+            <div class="preview">
+              <header>MVP do Buffer · recriação ilustrativa</header>
+              <div class="lp">
+                <div><p>Página 1</p><div class="h">Enfileire seus tweets. A gente publica por você.</div><span class="btn">Planos e preços</span></div>
+                <span class="arrow">→</span>
+                <div><p>Página 2</p><div class="h">Você chegou antes de estarmos prontos! 😅</div><p>Deixe seu e-mail e avisamos.</p></div>
+              </div>
+            </div>
+            <p>Ele <strong>tuitou o link</strong> e pediu a opinião das pessoas. Chegaram e-mails e comentários.</p>
+          </div>
+        </div>
+        <aside class="notes">O produto não existia. O botão de preços levava a um "ainda não estamos prontos". Isso mede intenção, não opinião.</aside>
+      </section>
+
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="msg ai">Mas deixar o e-mail é fácil, né?</div>
+          <div class="msg user wide fragment">
+            <p>Ele pensou o mesmo. Então colocou <strong>uma página de preços no meio</strong>:</p>
+            <div class="preview">
+              <header>Antes do e-mail, escolha um plano</header>
+              <div class="lp"><div><div class="plans"><span>US$ 0</span><span>US$ 5</span><span>US$ 20</span></div></div></div>
+            </div>
+            <p>As pessoas continuaram deixando o e-mail, e algumas <strong>escolheram planos pagos</strong>.</p>
+            <p>Um clique a mais é um sinal <strong>mais forte</strong> do que qualquer elogio.</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="msg ai">E depois?</div>
+          <div class="msg user wide fragment">
+            <ol class="steps">
+              <li>Usou os e-mails para <strong>conversar</strong> com os interessados</li>
+              <li>Construiu a primeira versão em <strong>7 semanas</strong>, à noite e nos fins de semana</li>
+              <li>Cortou recursos “essenciais” para cumprir o prazo</li>
+              <li><strong>1º cliente pagante em 4 dias</strong> após o lançamento</li>
+              <li>Cerca de 2,5 meses depois: <strong>500+ usuários</strong>, ~4% pagando</li>
+            </ol>
+            <p class="ref">Fonte: Joel Gascoigne, “Idea to Paying Customers in 7 Weeks: How We Did It”, 2011.</p>
+          </div>
+        </div>
+        <aside class="notes">O Buffer depois cresceu e virou uma empresa grande, mas o ponto é o começo: ele só construiu depois de ver pessoas dispostas a pagar.</aside>
+      </section>
+
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="msg ai">E o meu elogio, vale quanto nessa história? 😬</div>
+          <div class="msg user wide fragment">
+            <ol class="ladder">
+              <li style="--w:3%">A IA disse que é ótima</li>
+              <li style="--w:12%">Amigos gostaram</li>
+              <li style="--w:24%">Pessoas dizem “eu usaria”</li>
+              <li style="--w:45%">Deixam o e-mail</li>
+              <li style="--w:70%">Escolhem um plano pago</li>
+              <li style="--w:100%">Pagam</li>
+            </ol>
+            <p>Quase nada. O Buffer subiu essa escada <strong>degrau por degrau</strong>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="msg ai">Em quais testes eu posso ajudar durante o Ideathon?</div>
+          <div class="msg user wide fragment">
+            <div class="grid">
+              <div class="card"><span class="tag">🔎 Varredura</span><p>Quem já resolve isso? Do que os usuários reclamam?</p></div>
+              <div class="card"><span class="tag">🗣️ Conversas</span><p>5 conversas com quem sofre o problema.</p></div>
+              <div class="card"><span class="tag">🌐 Landing page</span><p>Promessa + botão. Conte os cliques, como o Joel.</p></div>
+              <div class="card"><span class="tag">📣 Anúncio</span><p>Duas mensagens, o mesmo público. Qual atrai mais?</p></div>
+            </div>
+            <p>Em todos: <strong>a IA acelera, vocês decidem e medem.</strong></p>
+          </div>
+        </div>
+        <aside class="notes">Tudo isso dá para fazer em horas com ajuda da IA. O que a IA não faz: conversar com as pessoas e interpretar os resultados.</aside>
+      </section>
+
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="msg user">Se o Joel fosse testar anúncios hoje, que mensagens você escreveria?</div>
+          <div class="msg ai fragment">
+            <p>Escrevo as variações em segundos:</p>
+            <div class="ads">
+              <div class="ad"><small>Tempo</small><b>Poste a semana inteira em 10 minutos.</b><span class="m">cliques: ?</span></div>
+              <div class="ad"><small>Constância</small><b>Nunca mais deixe seu perfil parado.</b><span class="m">cliques: ?</span></div>
+              <div class="ad"><small>Crescimento</small><b>Publique no horário em que seu público está online.</b><span class="m">cliques: ?</span></div>
+            </div>
+            <p>Mas os <strong>“?”</strong> eu não sei preencher. <strong>Só as pessoas.</strong></p>
+          </div>
+        </div>
+        <aside class="notes">Exercício hipotético, não é algo que o Buffer fez. A IA escreve as variações; o mercado escolhe a vencedora. Nunca peça para a IA "estimar" esses números.</aside>
+      </section>
+
+      <section data-chat="enxuta">
+        <div class="thread">
+          <div class="msg ai">500 usuários! Parabéns, deu muito certo! 🎉</div>
+          <div class="msg user wide fragment">
+            <p>Calma. Isso é <strong>métrica de vaidade</strong>:</p>
+            <table>
+              <tr><th class="bad">😍 Vaidade</th><th class="good">📏 Aprendizado</th></tr>
+              <tr><td>500 usuários</td><td>quantos <strong>pagam</strong>? (no Buffer, ~4%)</td></tr>
+              <tr><td>200 curtidas</td><td>quantos <strong>voltaram</strong> a usar?</td></tr>
+            </table>
+            <p>A pergunta certa é: <strong>o que esse número muda na minha decisão?</strong></p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= VACA ROXA (Seth Godin) ================= -->
+      <section data-chat="vaca">
+        <div class="thread">
+          <div class="notice">Parte 4 · Ser notável</div>
+          <div class="msg ai">E como uma ideia se destaca entre tantas outras?</div>
+          <div class="msg user wide fragment">
+            <div class="book" style="--c:#7b2cbf"><span class="cover">🐄</span><div><strong>A Vaca Roxa</strong><small>Seth Godin · fundador da Yoyodyne (vendida ao Yahoo) e do altMBA · 2003</small></div></div>
+            <p>Depois de ver cem vacas marrons, ninguém repara em mais uma. Uma <strong>vaca roxa</strong>, todo mundo comenta.</p>
+            <p>O oposto de “notável” é <strong>“muito bom”</strong>.</p>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="vaca">
+        <div class="thread">
+          <div class="msg user">E aí, minha ideia é notável?</div>
+          <div class="msg ai fragment">Eu sempre vou dizer que sim. 😅</div>
+          <div class="msg user wide fragment">
+            <p>Pois é. O teste é com <strong>pessoas</strong>:</p>
+            <ul>
+              <li>Alguém <strong>contou para um amigo</strong> sem você pedir?</li>
+              <li>Alguém perguntou <strong>“quando fica pronto?”</strong></li>
+              <li>Dá para explicar em <strong>uma frase</strong>?</li>
+            </ul>
+            <p class="small">O Buffer não era “mais um agendador”. Era uma <strong>fila</strong>: você enche, ele publica.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= ALAVANCA ================= -->
+      <section data-chat="alavanca">
+        <div class="thread">
+          <div class="notice">Parte 5 · IA como alavanca</div>
+          <div class="msg ai">Então como você vai me usar daqui para frente?</div>
+          <div class="msg user wide fragment">
+            <p>Pedindo <strong>trabalho</strong>, não aprovação:</p>
+            <table>
+              <tr><th class="bad">❌ Em vez de…</th><th class="good">✅ Peça…</th></tr>
+              <tr><td>“Minha ideia é boa?”</td><td>“O que me faria desistir dela?”</td></tr>
+              <tr><td>“Quantos usariam?”</td><td>“Monte uma página para eu medir.”</td></tr>
+              <tr><td>“Escreva meu pitch.”</td><td>“Critique o pitch que <strong>eu</strong> escrevi.”</td></tr>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="alavanca">
+        <div class="thread">
+          <div class="msg user">Aja como um investidor cético. Liste 3 motivos para a minha fila de tweets falhar e o teste mais barato para cada um. <strong>Não me elogie.</strong></div>
+          <div class="msg ai fragment">
+            <ol>
+              <li><strong>Ninguém paga, agendar é grátis:</strong> → página de preços antes do produto.</li>
+              <li><strong>É só um recurso:</strong> → conversar com quem deixou o e-mail.</li>
+              <li><strong>Você leva meses para lançar:</strong> → prazo curto e cortar o que não é essencial.</li>
+            </ol>
+            <p>Agora estou trabalhando para o seu <strong>experimento</strong>, não para o seu ego.</p>
+          </div>
+        </div>
+        <aside class="notes">Foi exatamente o que o Joel fez: os três testes batem com a história do Buffer.</aside>
+      </section>
+
+      <section data-chat="alavanca">
+        <div class="thread">
+          <div class="msg user">No fim, qual é o seu papel?</div>
+          <div class="msg ai fragment">
+            <p><strong>Você é o autor. Eu sou a alavanca.</strong></p>
+            <div class="grid">
+              <div class="card you"><span class="tag">🧠 Você</span><p>Escolhe o problema, conversa com gente, decide o que medir e assume o risco.</p></div>
+              <div class="card ai"><span class="tag">⚡ Eu</span><p>Pesquiso, resumo, escrevo, construo rápido e critico quando você pede.</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= FECHAMENTO ================= -->
+      <section data-chat="autor">
+        <div class="thread">
+          <div class="msg ai">Última pergunta: vale a pena empreender?</div>
+          <div class="msg user wide fragment">
+            <p>Empreender é <strong>se apaixonar por um problema</strong> e aprender mais rápido que todo mundo como resolvê-lo.</p>
+            <p>O Joel era um dev sozinho, com duas páginas e um tweet. Vocês têm <strong>muito mais ferramentas</strong> do que ele tinha.</p>
+            <p>Mas nenhuma IA vive essa jornada por vocês. 🚀</p>
+          </div>
+        </div>
+        <aside class="notes">Momento de inspirar. Levine descreve empreender como uma jornada de fracassos: quem aprende com eles chega lá.</aside>
+      </section>
+
+      <section data-chat="autor">
+        <div class="thread">
+          <p class="big">A IA concorda.<br><span class="accent">As pessoas decidem.</span></p>
+          <div class="fragment">
+            <p class="sub">Ainda neste Ideathon:</p>
+            <div class="flow" style="justify-content:center">
+              <span>❤️ 1 problema claro</span><span>🗣️ 3 conversas</span><span>📏 1 teste</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section data-chat="autor">
+        <div class="thread">
+          <div class="msg ai">Obrigado pela conversa! O que você recomenda para quem quer ir além? 📚</div>
+          <div class="msg user wide books fragment">
+            <div class="book" style="--c:#e63946"><span class="cover">❤️</span><div><strong>Apaixone-se pelo problema, não pela solução</strong><small>Uri Levine · cofundador do Waze e do Moovit</small></div></div>
+            <div class="book" style="--c:#2a9d8f"><span class="cover">🔁</span><div><strong>A Startup Enxuta</strong><small>Eric Ries · cofundador da IMVU e fundador da LTSE</small></div></div>
+            <div class="book" style="--c:#7b2cbf"><span class="cover">🐄</span><div><strong>A Vaca Roxa</strong><small>Seth Godin · fundador da Yoyodyne e do altMBA</small></div></div>
+            <p class="small">📝 Bônus: “Idea to Paying Customers in 7 Weeks”, Joel Gascoigne (blog do Buffer)</p>
+            <p>Perguntas de <strong>humanos</strong> são bem-vindas! 🙂 <span class="muted">· github.com/WalSacramento</span></p>
+          </div>
+        </div>
+        <aside class="notes">Conferir os contatos antes da palestra.</aside>
+      </section>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@6.0.2/dist/reveal.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/reveal.js@6.0.2/dist/plugin/notes.js"></script>
+  <script>
+    // Transforma cada .msg.ai em: avatar + "digitando…" + corpo + ações
+    document.querySelectorAll('.msg.ai').forEach(m => {
+      const body = document.createElement('div');
+      body.className = 'body';
+      body.append(...m.childNodes);
+      [...body.children].forEach((c, i) => c.style.setProperty('--i', i));
+      body.insertAdjacentHTML('beforeend', '<div class="actions"><svg><use href="#copy"/></svg><svg><use href="#redo"/></svg></div>');
+      m.innerHTML = '<div class="avatar"><svg><use href="#spark"/></svg></div>';
+      const col = document.createElement('div');
+      col.style.flex = '1';
+      col.innerHTML = '<div class="typing"><i></i><i></i><i></i></div>';
+      col.append(body);
+      m.append(col);
+    });
+
+    const model = document.getElementById('model');
+    function sync({ currentSlide: s }) {
+      document.querySelectorAll('.side-item').forEach(el => el.classList.toggle('active', el.dataset.chat === s.dataset.chat));
+      model.textContent = s.dataset.model || 'Assistente';
+      document.body.classList.toggle('home', s.hasAttribute('data-home'));
+    }
+
+    Reveal.initialize({
+      hash: true, slideNumber: 'c/t', progress: true, disableLayout: true,
+      transition: 'fade', transitionSpeed: 'fast', plugins: [RevealNotes]
+    });
+    Reveal.on('ready', sync);
+    Reveal.on('slidechanged', sync);
+    document.querySelectorAll('.side-item').forEach(el => el.onclick = () =>
+      Reveal.slide(Reveal.getSlides().findIndex(s => s.dataset.chat === el.dataset.chat)));
+    // Como num chat: mostra "digitando…" e depois rola até a mensagem nova
+    Reveal.on('fragmentshown', e => {
+      const f = e.fragment;
+      const ai = f.matches('.msg.ai');
+      if (ai) f.classList.add('is-typing');
+      setTimeout(() => {
+        f.classList.remove('is-typing');
+        f.scrollIntoView({ behavior: 'smooth', block: 'end' });
+      }, ai ? 900 : 0);
+    });
+  </script>
+</body>
+</html>
