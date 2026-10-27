@@ -815,6 +815,24 @@
     });
     Reveal.on('ready', sync);
     Reveal.on('slidechanged', sync);
+    // Na mesma conversa, trocar de slide = rolar o chat: o slide novo encosta logo abaixo
+    // do anterior e os dois sobem juntos, sem transparência
+    Reveal.on('slidechanged', ({ previousSlide: a, currentSlide: b }) => {
+      if (!a || a.dataset.chat !== b.dataset.chat || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      const all = Reveal.getSlides(), fwd = all.indexOf(b) > all.indexOf(a);
+      const [up, down] = fwd ? [a, b] : [b, a];
+      const gap = parseFloat(getComputedStyle(up).fontSize);
+      const d = up.querySelector('.thread').lastElementChild.getBoundingClientRect().bottom + gap
+              - down.querySelector('.thread').getBoundingClientRect().top;
+      const opt = { duration: 650, easing: 'cubic-bezier(.45,0,.2,1)' };
+      // transições CSS do fade ganham das animações; desliga durante a rolagem
+      [a, b].forEach(s => s.style.transition = 'none');
+      up.animate([{ transform: `translateY(${fwd ? 0 : -d}px)`, opacity: 1 }, { opacity: 1, offset: .6 },
+                  { transform: `translateY(${fwd ? -d : 0}px)`, opacity: fwd ? 0 : 1 }], opt);
+      down.animate([{ transform: `translateY(${fwd ? d : 0}px)`, opacity: 1 }, { opacity: 1, offset: .6 },
+                    { transform: `translateY(${fwd ? 0 : d}px)`, opacity: fwd ? 1 : 0 }], opt)
+        .finished.then(() => [a, b].forEach(s => s.style.transition = ''));
+    });
     document.querySelectorAll('.side-item').forEach(el => el.onclick = () =>
       Reveal.slide(Reveal.getSlides().findIndex(s => s.dataset.chat === el.dataset.chat)));
     // Como num chat: mostra "digitando…" e depois rola até a mensagem nova
